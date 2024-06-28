@@ -45,10 +45,10 @@ type testInfo struct {
 	testStartTime  time.Time
 }
 
-type userLineData struct {
-	timestamp time.Time
-	scenario  string
-	status    string
+type UserLineData struct {
+	Timestamp time.Time
+	Scenario  string
+	Status    string
 }
 
 var (
@@ -61,7 +61,7 @@ var (
 	// pc is a channel to send all point from parser to
 	pc = make(chan *infc.Point, 1000)
 	// uc is a channel for userLineData processing
-	uc = make(chan userLineData, 1000)
+	uc = make(chan UserLineData, 1000)
 
 	// TODO: parameterize later
 	writeDataTimeout = 5
@@ -125,8 +125,8 @@ SendLoop:
 }
 
 // SendUserLineData takes a line with user data and adds it to the processing list
-func SendUserLineData(timestamp time.Time, scenario, status string) {
-	uld := userLineData{timestamp, scenario, status}
+func SendUserLineData(userLineData UserLineData) {
+	uld := userLineData
 
 	uc <- uld
 }
@@ -219,13 +219,13 @@ CollectorLoop:
 		SearcherLoop:
 			for {
 				// If point is somehow from the past
-				if p.timestamp.Before(secondFrom) {
+				if p.Timestamp.Before(secondFrom) {
 					// Then we just update the map
-					switch p.status {
+					switch p.Status {
 					case "START":
-						usersMap[p.scenario]++
+						usersMap[p.Scenario]++
 					case "END":
-						usersMap[p.scenario]--
+						usersMap[p.Scenario]--
 					}
 
 					break SearcherLoop
@@ -233,13 +233,13 @@ CollectorLoop:
 
 				// TODO: May combine with previous one later
 				// If timestamp is a part of the current time range
-				if (p.timestamp.After(secondFrom) || p.timestamp.Equal(secondFrom)) && p.timestamp.Before(secondTo) {
+				if (p.Timestamp.After(secondFrom) || p.Timestamp.Equal(secondFrom)) && p.Timestamp.Before(secondTo) {
 					// We update the map
-					switch p.status {
+					switch p.Status {
 					case "START":
-						usersMap[p.scenario]++
+						usersMap[p.Scenario]++
 					case "END":
-						usersMap[p.scenario]--
+						usersMap[p.Scenario]--
 					}
 
 					break SearcherLoop
